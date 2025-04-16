@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from recommender_logic import  feature_cols
+from recommender_logic import feature_cols
 
 
 content_df = pd.read_csv("content_df.csv")
