@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from recommender_logic import content_recommender
+from recommender_logic import content_recommender,evaluate_precision
 
 
 content_df = pd.read_csv("content_df.csv")
