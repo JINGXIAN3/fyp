@@ -185,8 +185,6 @@ def show_recommendations(result, df):
             print(f"\nSelected Movie: {details['title']}")
             print(f"   Genres: {', '.join(details['genres'])}")
             print(f"   Year: {(details['year'])}")
-            print(f"   Director: {details['director']}")
-            print(f"   Original Language: {details['original_language']}")
             print(f"   Runtime: {details['runtime_minutes']} minutes")
             print("----------------------------------------------------")
 
@@ -195,8 +193,6 @@ def show_recommendations(result, df):
             print(f"{idx}. Movie: {recommendation['title']}")
             print(f"   Genres: {', '.join(recommendation['genres'])}")
             print(f"   Year: {recommendation['year']}")
-            print(f"   Director: {recommendation['director']}")
-            print(f"   Language: {recommendation['original_language']}")
             print(f"   Runtime: {recommendation['runtime_minutes']} minutes")
             print(f"   TomatoMeter: {recommendation['tomatoMeter']}%")
             print("---")
