@@ -72,13 +72,13 @@ if option == "Content-Based Filtering (Category Selection)":
             input_type = 'title'
 
     if user_input and st.button("Get Recommendations"):
-    result = content_recommender(
-        user_input=user_input,
-        df=content_df,
-        feature_df=content_features,
-        top_n=5,
-        input_type=input_type
-    )
+        result = content_recommender(
+            user_input=user_input,
+            df=content_df,
+            feature_df=content_features,
+            top_n=5,
+            input_type=input_type
+        )
 
     if isinstance(result, str):
         st.error(result)
