@@ -1,26 +1,47 @@
 import streamlit as st
 
 # Streamlit UI
-st.title("Movie Recommender System")
+st.title("🎬 Movie Recommender System")
 
-# Add two buttons: Based on Category and Based on Description/Review
-button1 = st.button("Based on Category")
-button2 = st.button("Based on Description/Review")
+st.markdown("Choose a recommendation method below:")
 
-# Placeholder text for each button's functionality
+# Create four buttons
+button1 = st.button("Collaborative Filtering")
+button2 = st.button("Content-Based Filtering (Category Selection)")
+button3 = st.button("Content-Based Filtering (Textbox Input)")
+button4 = st.button("Hybrid Filtering")
+
+# Define placeholder behavior for each method
 if button1:
-    st.subheader("Movie Recommendations Based on Category")
-    st.write("Select your preferences based on categories like genre, target audience, and more.")
-    # Here, you'll add functionality later to recommend based on categories
+    st.subheader("👥 Collaborative Filtering")
+    st.write("Recommend movies based on user-user or item-item similarities.")
+    # TODO: Add your collaborative filtering function here
 
 elif button2:
-    st.subheader("Movie Recommendations Based on Description/Review")
-    st.write("Provide a movie description or review, and we'll recommend movies based on that.")
-    # Here, you'll add functionality later to recommend based on description or review
+    st.subheader("🎯 Content-Based Filtering (Category Selection)")
+    st.write("Select preferences like genre, year, or director for recommendations.")
+    # TODO: Add your content-based filtering (category) logic here
 
-# Optional: You can display information for each option
+elif button3:
+    st.subheader("📝 Content-Based Filtering (Textbox Input)")
+    st.write("Type a movie description or review, and we'll recommend similar movies.")
+    user_input = st.text_area("Enter a movie description or review:")
+    if user_input and st.button("Get Recommendations"):
+        # TODO: Call your NLP-based recommender here
+        st.write("Recommended movies based on your input:")
+        # Example placeholder
+        # for movie in get_recommendations(user_input): st.write(movie)
+
+elif button4:
+    st.subheader("🔀 Hybrid Filtering")
+    st.write("Combine collaborative and content-based filtering for improved recommendations.")
+    # TODO: Add your hybrid filtering logic here
+
+# Sidebar Help
 st.sidebar.markdown("""
 ### How to Use:
-- **Based on Category**: Select movie categories and preferences.
-- **Based on Description/Review**: Enter a movie description or review, and get recommendations.
+- **Collaborative Filtering**: Recommend based on similar users.
+- **Content-Based (Category)**: Select filters like genre/director.
+- **Content-Based (Textbox)**: Describe a movie or review and get similar ones.
+- **Hybrid Filtering**: Combine both methods for better results.
 """)
