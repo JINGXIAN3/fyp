@@ -1,5 +1,16 @@
 import streamlit as st
 from recommender_logic import content_recommender, content_df, content_features, language_decoder, director_decoder
+
+feature_cols = [
+    'runtimeMinutes', 'director', 'originalLanguage',
+    'Action', 'Adventure', 'Animation', 'Anime', 'Comedy', 'Crime',
+    'Documentary', 'Drama', 'Entertainment', 'Faith & spirituality',
+    'Fantasy', 'Health & wellness', 'History', 'Horror', 'Kids & family',
+    'LGBTQ+', 'Music', 'Nature','Other', 'Reality', 'Romance', 'Sci-fi', 'Sports',
+    'Variety Show', 'War', 'Western'
+]
+
+content_features = content_df[feature_cols]
 # Title
 st.title("🎬 Movie Recommender System")
 
