@@ -8,7 +8,7 @@
  "encoded_df.head()"
 ]
   },
-  {
+{
 "cell_type": "code",
 "id": "89e64886-a812-4339-bb9f-89620c0c6caa",
 "metadata": {},
