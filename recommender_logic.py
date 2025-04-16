@@ -175,3 +175,39 @@ def evaluate_precision(result, input_type, user_input):
         except ValueError:
             return None
     return None
+
+def show_recommendations(result, df):
+    if isinstance(result, str):
+        print(result)
+    else:
+        if result['movie_details']:
+            details = result['movie_details']
+            print(f"\nSelected Movie: {details['title']}")
+            print(f"   Genres: {', '.join(details['genres'])}")
+            print(f"   Year: {(details['year'])}")
+            print(f"   Director: {details['director']}")
+            print(f"   Original Language: {details['original_language']}")
+            print(f"   Runtime: {details['runtime_minutes']} minutes")
+            print("----------------------------------------------------")
+
+        print(f"\nRecommendations for '{result['movie_title']}':")
+        for idx, recommendation in enumerate(result['recommendations'], 1):
+            print(f"{idx}. Movie: {recommendation['title']}")
+            print(f"   Genres: {', '.join(recommendation['genres'])}")
+            print(f"   Year: {recommendation['year']}")
+            print(f"   Director: {recommendation['director']}")
+            print(f"   Language: {recommendation['original_language']}")
+            print(f"   Runtime: {recommendation['runtime_minutes']} minutes")
+            print(f"   TomatoMeter: {recommendation['tomatoMeter']}%")
+            print("---")
+
+        input_type = result['input_type']
+        user_input = result['user_input']
+
+        if input_type in ['genre', 'language', 'year']:
+            precision_val = evaluate_precision(result, input_type, user_input)
+
+            print("\n--- Evaluation Metrics ---")
+            if precision_val is not None:
+                print(f"Precision@{len(result['recommendations'])}: {precision_val:.2f}")
+
