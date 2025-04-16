@@ -31,7 +31,7 @@ def content_recommender(user_input, df, feature_df, top_n=5, input_type='title')
 
     if input_type == 'title':
         try:
-            movie_idx = df[df['title'].str.lower() == user_input.lower()].index[0]
+            movie_idx = df[df['title'] == user_input].index[0]
         except IndexError:
             return f"Movie '{user_input}' not found."
 
