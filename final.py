@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
-from recommender_logic import content_recommender,evaluate_precision, language_decoder, director_decoder
+from recommender_logic import content_recommender,show_recommendation
+
 
 
 content_df = pd.read_csv("content_df.csv")
@@ -80,35 +81,7 @@ if option == "Content-Based Filtering (Category Selection)":
             top_n=5,
             input_type=input_type
         )
-
-    if isinstance(result, str):
-        st.error(result)
-    else:
-        if result.get("movie_details"):
-            details = result["movie_details"]
-            st.markdown(f"### 🎞️ Selected Movie: {details['title']}")
-            st.write(f"**Genres:** {', '.join(details['genres'])}")
-            st.write(f"**Director:** {details['director']}")
-            st.write(f"**Language:** {details['original_language']}")
-            st.write(f"**Year:** {details['year']}")
-            st.write(f"**TomatoMeter:** {details['tomatoMeter']}%")
-
-        st.markdown("### 📌 Top Recommendations:")
-        for idx, rec in enumerate(result["recommendations"], 1):
-            st.markdown(f"**{idx}. {rec['title']}**")
-            st.write(f"- Genres: {', '.join(rec['genres'])}")
-            st.write(f"- Director: {rec['director']}")
-            st.write(f"- Language: {rec['original_language']}")
-            st.write(f"- Year: {rec['year']}")
-            st.write(f"- Runtime: {rec['runtime_minutes']} minutes")
-            st.write(f"- TomatoMeter: {rec['tomatoMeter']}%")
-
-        # Evaluation Metric
-        if input_type in ['genre', 'language', 'year']:
-            precision_val = evaluate_precision(result, input_type, user_input)
-            st.markdown("---")
-            st.write(f"🎯 **Precision@{len(result['recommendations'])}**: {precision_val:.2f}")
-
+        show_recommendations(result, df)
 
 # Placeholder sections for other options
 elif option == "Collaborative Filtering":
