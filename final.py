@@ -1,5 +1,5 @@
 import streamlit as st
-
+from recommender_logic import content_recommender, content_df, content_features, language_decoder, director_decoder
 # Title
 st.title("🎬 Movie Recommender System")
 
