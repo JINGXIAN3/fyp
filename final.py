@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from recommender_logic import content_df, content_features, language_decoder, director_decoder
+from recommender_logic import  content_features, language_decoder, director_decoder
 
 
 content_df = pd.read_csv("content_df.csv")
