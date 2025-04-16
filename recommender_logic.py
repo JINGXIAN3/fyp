@@ -1,7 +1,15 @@
 import pandas as pd
 import numpy as np
-import sklearn
+import pickle
 from sklearn.metrics.pairwise import cosine_similarity
+
+# Load the language decoder
+with open("language_decoder.pkl", "rb") as f:
+    language_decoder = pickle.load(f)
+
+# Load the director decoder if needed
+with open("director_decoder.pkl", "rb") as f:
+    director_decoder = pickle.load(f)
 
 def sort_by_tomatoMeter(df, similarities, top_n=5):
     matched = [(idx, df.iloc[idx], similarities[idx]) for idx in similarities.argsort()[::-1]]
