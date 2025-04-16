@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from recommender_logic import content_recommender,show_recommendation
+from recommender_logic import content_recommender,show_recommendations
 
 
 
