@@ -1,6 +1,4 @@
 import streamlit as st
-from recommender_logic import content_recommender, content_df, content_features, language_decoder, director_decoder
-
 feature_cols = [
     'runtimeMinutes', 'director', 'originalLanguage',
     'Action', 'Adventure', 'Animation', 'Anime', 'Comedy', 'Crime',
