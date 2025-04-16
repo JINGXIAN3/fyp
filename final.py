@@ -1,4 +1,8 @@
 import streamlit as st
+
+content_df = pd.read_csv("content_df.csv")
+top_movies_collab_df = pd.read_csv("top_movies_collab_df.csv")
+
 feature_cols = [
     'runtimeMinutes', 'director', 'originalLanguage',
     'Action', 'Adventure', 'Animation', 'Anime', 'Comedy', 'Crime',
