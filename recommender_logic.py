@@ -157,3 +157,21 @@ def content_recommender(user_input, df, feature_df, top_n=5, input_type='title')
         explanation['recommendations'].append(movie_features)
 
     return explanation
+
+# Evaluation function for Precision
+def evaluate_precision(result, input_type, user_input):
+    if isinstance(result, str):
+        return None
+    recommendations = result['recommendations']
+    top_n = len(recommendations)
+    if input_type == 'genre':
+        return sum([1 if user_input in rec['genres'] else 0 for rec in recommendations]) / top_n
+    elif input_type == 'language':
+        return sum([1 if rec['original_language'].lower() == user_input.lower() else 0 for rec in recommendations]) / top_n
+    elif input_type == 'year':
+        try:
+            year = int(user_input)
+            return sum([1 if rec['year'] == year else 0 for rec in recommendations]) / top_n
+        except ValueError:
+            return None
+    return None
