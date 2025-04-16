@@ -6,7 +6,6 @@ import nltk
 import sklearn
 import re
 from sklearn.metrics.pairwise import cosine_similarity
-pip install matplotlib
 
 def sort_by_tomatoMeter(df, similarities, top_n=5):
     matched = [(idx, df.iloc[idx], similarities[idx]) for idx in similarities.argsort()[::-1]]
