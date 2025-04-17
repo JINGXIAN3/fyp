@@ -79,7 +79,7 @@ if option == "Content-Based Filtering (Category Selection)":
             top_n=5,
             input_type=input_type
         )
-        show_recommendations(result, df)
+        show_recommendations(result, content_df)
 
 # Placeholder sections for other options
 elif option == "Collaborative Filtering":
