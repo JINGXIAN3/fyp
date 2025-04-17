@@ -64,13 +64,6 @@ if option == "Content-Based Filtering (Category Selection)":
         user_input = str(year)
         input_type = 'year'
 
-    elif filter_type == "Movie Title":
-        movie_titles = sorted(content_df['title'].dropna().unique())
-        selected_title = st.text_input("Enter Movie Title (exact match preferred)")
-        if selected_title.strip():
-            user_input = selected_title.strip()
-            input_type = 'title'
-
     if user_input and st.button("Get Recommendations"):
         result = content_recommender(
             user_input=user_input,
