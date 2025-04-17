@@ -3,13 +3,6 @@ import pandas as pd
 import numpy as np
 from content_logic import content_recommender, evaluate_precision, get_language_decoder, get_director_decoder
 
-# Page configuration
-st.set_page_config(
-    page_title="Movie Recommender System",
-    page_icon="🎬",
-    layout="wide"
-)
-
 # Get decoders
 language_decoder = get_language_decoder()
 director_decoder = get_director_decoder()
