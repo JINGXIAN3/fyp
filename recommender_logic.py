@@ -6,6 +6,18 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 def load_data():
     content_df = pd.read_csv("content_df.csv")
+    feature_cols = [
+    'runtimeMinutes', 'director', 'originalLanguage',
+    'Action', 'Adventure', 'Animation', 'Anime', 'Comedy', 'Crime',
+    'Documentary', 'Drama', 'Entertainment', 'Faith & spirituality',
+    'Fantasy', 'Health & wellness', 'History', 'Horror', 'Kids & family',
+    'LGBTQ+', 'Music', 'Nature','Other', 'Reality', 'Romance', 'Sci-fi', 'Sports',
+    'Variety Show', 'War', 'Western'
+]
+
+content_features = content_df[feature_cols]
+
+this is the feature_df, i no import encoded_df
     return content_df
 
 def load_decoders():
