@@ -16,8 +16,6 @@ def load_data():
 ]
 
 content_features = content_df[feature_cols]
-
-this is the feature_df, i no import encoded_df
     return content_df
 
 def load_decoders():
