@@ -1,8 +1,6 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-from content_logic import content_recommender, evaluate_precision, get_language_decoder, get_director_decoder
-
 # Get decoders
 language_decoder = get_language_decoder()
 director_decoder = get_director_decoder()
