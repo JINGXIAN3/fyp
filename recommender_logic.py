@@ -1,23 +1,27 @@
+# recommender_logic.py
 import pandas as pd
 import numpy as np
 import pickle
 from sklearn.metrics.pairwise import cosine_similarity
 
-# Load the language decoder
-with open("language_decoder.pkl", "rb") as f:
-    language_decoder = pickle.load(f)
+def load_data():
+    content_df = pd.read_csv("content_df.csv")
+    encoded_df = pd.read_csv("encoded_df.csv")
+    return encoded_df, content_df
 
-# Load the director decoder
-with open("director_decoder.pkl", "rb") as f:
-    director_decoder = pickle.load(f)
+def load_decoders():
+    with open("language_decoder.pkl", "rb") as f:
+        language_decoder = pickle.load(f)
+    with open("director_decoder.pkl", "rb") as f:
+        director_decoder = pickle.load(f)
+    return language_decoder, director_decoder
 
 def sort_by_tomatoMeter(df, similarities, top_n=5):
     matched = [(idx, df.iloc[idx], similarities[idx]) for idx in similarities.argsort()[::-1]]
     matched.sort(key=lambda x: float(x[1].get('tomatoMeter', 0) or 0), reverse=True)
     return [idx for idx, _, _ in matched[:top_n]]
 
-# Recommender function
-def content_recommender(user_input, df, feature_df, top_n=5, input_type='title'):
+def content_recommender(user_input, df, feature_df, language_decoder, director_decoder, top_n=5, input_type='title'):
     df = df.reset_index(drop=True)
     feature_df = feature_df.reset_index(drop=True)
 
@@ -47,7 +51,7 @@ def content_recommender(user_input, df, feature_df, top_n=5, input_type='title')
         for idx in range(len(similarities)):
             movie = df.iloc[idx]
             if idx == movie_idx:
-                similarities[idx] = -1  # Exclude the same movie
+                similarities[idx] = -1
                 continue
             if movie['director'] == selected_director:
                 similarities[idx] += 0.1
@@ -79,27 +83,24 @@ def content_recommender(user_input, df, feature_df, top_n=5, input_type='title')
     elif input_type == 'genre':
         if user_input not in feature_df.columns:
             return f"Genre '{user_input}' not found."
-        
-        # Filter to include only movies with this genre
+
         matching_indices = feature_df[feature_df[user_input] == 1].index
         if len(matching_indices) == 0:
             return f"No movies found with genre '{user_input}'."
-        
-        # Use the filtered dataframes
+
         selected_df = df.loc[matching_indices].reset_index(drop=True)
         selected_features = feature_df.loc[matching_indices].reset_index(drop=True)
-        
+
         target_vector = selected_features.mean().values.reshape(1, -1)
-        all_vectors = selected_features.values
-        similarities = cosine_similarity(target_vector, all_vectors)[0]
+        similarities = cosine_similarity(target_vector, selected_features.values)[0]
         top_indices = sort_by_tomatoMeter(selected_df, similarities, top_n)
-        
+
         df = selected_df
         feature_df = selected_features
 
     elif input_type == 'language':
-        rev_language_decoder = {v.lower(): k for k, v in language_decoder.items()}
-        lang_code = rev_language_decoder.get(user_input.lower())
+        rev_decoder = {v.lower(): k for k, v in language_decoder.items()}
+        lang_code = rev_decoder.get(user_input.lower())
         if lang_code is None:
             return f"Language '{user_input}' not found."
 
@@ -107,58 +108,47 @@ def content_recommender(user_input, df, feature_df, top_n=5, input_type='title')
         if matching_indices.empty:
             return f"No movies found for language '{user_input}'."
 
-        target_vector = feature_df.loc[matching_indices].mean().values.reshape(1, -1)
         selected_df = df.loc[matching_indices]
         selected_features = feature_df.loc[matching_indices]
-        all_vectors = selected_features.values
-        similarities = cosine_similarity(target_vector, all_vectors)[0]
+        target_vector = selected_features.mean().values.reshape(1, -1)
+        similarities = cosine_similarity(target_vector, selected_features.values)[0]
         top_indices = sort_by_tomatoMeter(selected_df, similarities, top_n)
 
     elif input_type == 'year':
         try:
             year = int(user_input)
         except ValueError:
-            return "Invalid year format. Please enter a number."
+            return "Invalid year format."
         matching_indices = df[df['year'] == year].index
         if matching_indices.empty:
             return f"No movies found for year '{user_input}'."
 
-        target_vector = feature_df.loc[matching_indices].mean().values.reshape(1, -1)
         selected_df = df.loc[matching_indices]
         selected_features = feature_df.loc[matching_indices]
-        all_vectors = selected_features.values
-        similarities = cosine_similarity(target_vector, all_vectors)[0]
+        target_vector = selected_features.mean().values.reshape(1, -1)
+        similarities = cosine_similarity(target_vector, selected_features.values)[0]
         top_indices = sort_by_tomatoMeter(selected_df, similarities, top_n)
 
     else:
         return f"Unsupported input type: {input_type}"
 
     for idx in top_indices:
-        movie_data = df.iloc[idx] if input_type == 'title' else (selected_df.iloc[idx] if input_type in ['language', 'year'] else df.iloc[idx])
-        similarity_score = similarities[idx]
-        genres = [
-            col for col in feature_df.columns
-            if col not in ['runtimeMinutes', 'director', 'originalLanguage'] and movie_data.get(col, 0) == 1
-        ]
-        director = director_decoder.get(movie_data['director'], 'Unknown')
-        language = language_decoder.get(movie_data['originalLanguage'], 'Unknown')
-
-        movie_features = {
+        movie_data = df.iloc[idx]
+        genres = [col for col in feature_df.columns if col not in ['runtimeMinutes', 'director', 'originalLanguage'] and movie_data.get(col, 0) == 1]
+        recommendation = {
             'title': movie_data['title'],
-            'similarity_score': similarity_score,
+            'similarity_score': similarities[idx],
             'genres': genres,
             'year': movie_data.get('year', 'N/A'),
-            'director': director,
-            'original_language': language,
+            'director': director_decoder.get(movie_data['director'], 'Unknown'),
+            'original_language': language_decoder.get(movie_data['originalLanguage'], 'Unknown'),
             'runtime_minutes': movie_data['runtimeMinutes'],
             'tomatoMeter': movie_data.get('tomatoMeter', 'N/A')
         }
-
-        explanation['recommendations'].append(movie_features)
+        explanation['recommendations'].append(recommendation)
 
     return explanation
 
-# Evaluation function for Precision
 def evaluate_precision(result, input_type, user_input):
     if isinstance(result, str):
         return None
@@ -175,35 +165,3 @@ def evaluate_precision(result, input_type, user_input):
         except ValueError:
             return None
     return None
-
-def show_recommendations(result, df):
-    if isinstance(result, str):
-        print(result)
-    else:
-        if result['movie_details']:
-            details = result['movie_details']
-            print(f"\nSelected Movie: {details['title']}")
-            print(f"   Genres: {', '.join(details['genres'])}")
-            print(f"   Year: {(details['year'])}")
-            print(f"   Runtime: {details['runtime_minutes']} minutes")
-            print("----------------------------------------------------")
-
-        print(f"\nRecommendations for '{result['movie_title']}':")
-        for idx, recommendation in enumerate(result['recommendations'], 1):
-            print(f"{idx}. Movie: {recommendation['title']}")
-            print(f"   Genres: {', '.join(recommendation['genres'])}")
-            print(f"   Year: {recommendation['year']}")
-            print(f"   Runtime: {recommendation['runtime_minutes']} minutes")
-            print(f"   TomatoMeter: {recommendation['tomatoMeter']}%")
-            print("---")
-
-        input_type = result['input_type']
-        user_input = result['user_input']
-
-        if input_type in ['genre', 'language', 'year']:
-            precision_val = evaluate_precision(result, input_type, user_input)
-
-            print("\n--- Evaluation Metrics ---")
-            if precision_val is not None:
-                print(f"Precision@{len(result['recommendations'])}: {precision_val:.2f}")
-
