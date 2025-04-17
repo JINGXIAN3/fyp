@@ -6,8 +6,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 def load_data():
     content_df = pd.read_csv("content_df.csv")
-    encoded_df = pd.read_csv("encoded_df.csv")
-    return encoded_df, content_df
+    return content_df
 
 def load_decoders():
     with open("language_decoder.pkl", "rb") as f:
