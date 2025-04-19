@@ -44,7 +44,7 @@ st.title("🎬 Movie Recommender System")
 
 # --- Method Selection ---
 method = st.selectbox("Select Recommendation Method:", [
-    "Content-Based", "Collaborative Filtering", "Hybrid", "NLP-Based"
+    "Content-Based", "Collaborative Filtering", "NLP-Based","Hybrid"
 ])
 
 # === Content-Based Filtering ===
@@ -115,11 +115,12 @@ elif method == "Collaborative Filtering":
 elif method == "NLP-Based":
     st.subheader("💬 NLP-Based Filtering")
     description = st.text_area("Describe the type of movie you want to watch:")
+    
     if st.button("Get Recommendations"):
-        recs = nlp_recommender(description)
+        recs = nlp_recommender(description, nlp_df, language_decoder, director_decoder, w2v_model)
         st.subheader("🔍 Recommendations")
-        for idx, rec in enumerate(recs, 1):
-            st.markdown(f"**{idx}. {rec['title']}** - {rec['score']}")
+        for idx, rec in enumerate(recs.itertuples(), 1):
+            st.markdown(f"**{idx}. {rec.title}** - Similarity Score: {rec.similarity:.2f}")
             
 # === Hybrid Filtering ===
 elif method == "Hybrid":
