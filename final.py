@@ -100,7 +100,7 @@ if method == "Content-Based":
 # === Collaborative Filtering ===
 elif method == "Collaborative Filtering":
     st.subheader("👥 Collaborative Filtering")
-    user_id = st.text_input("Enter User ID (Username):")  # changed to text input if usernames are not just numbers
+    user_id = st.number_input("Enter User ID (Username):")  # changed to text input if usernames are not just numbers
 
     if st.button("Get Recommendations"):
         recs = collaborative_recommender(user_id, top_movies_collab_df)  
