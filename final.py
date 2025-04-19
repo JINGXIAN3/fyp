@@ -100,12 +100,17 @@ if method == "Content-Based":
 # === Collaborative Filtering ===
 elif method == "Collaborative Filtering":
     st.subheader("👥 Collaborative Filtering")
-    user_id = st.number_input("Enter User ID:", min_value=1, step=1)
+    user_id = st.text_input("Enter User ID (Username):")  # changed to text input if usernames are not just numbers
+
     if st.button("Get Recommendations"):
-        recs = collaborative_recommender(user_id)
-        st.subheader("🔍 Recommendations")
-        for idx, rec in enumerate(recs, 1):
-            st.markdown(f"**{idx}. {rec['title']}** - {rec['score']}")
+        recs = collaborative_recommender(user_id, top_movies_collab_df)  
+        if isinstance(recs, str):
+            st.warning(recs)
+        else:
+            st.subheader("🔍 Recommendations")
+            for idx, rec in enumerate(recs["recommendations"], 1):
+                st.markdown(f"**{idx}. {rec['title']}** - {rec['score']:.2f}")
+
 
 
 # === NLP-Based Filtering ===
