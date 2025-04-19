@@ -103,13 +103,13 @@ elif method == "Collaborative Filtering":
     user_id = st.number_input("Enter User ID:", min_value=1, step=1)
 
     if st.button("Get Recommendations"):
-        recs = collaborative_recommender(user_id, top_movies_collab_df)  # ✅ fixed: added ratings_df
+        recs = collaborative_recommender(user_id, top_movies_collab_df) 
         if isinstance(recs, str):
             st.warning(recs)
         else:
             st.subheader("🔍 Recommendations")
             for idx, rec in enumerate(recs["recommendations"], 1):
-                st.markdown(f"**{idx}. {rec['title']}** - {rec['score']:.2f}")
+                st.markdown(f"**{idx}. {rec['title']}** - {rec['score']:.2f} %")
 
 # === NLP-Based Filtering ===
 elif method == "NLP-Based":
