@@ -1,5 +1,3 @@
-# streamlit_app.py
-
 import streamlit as st
 import pickle
 import pandas as pd
@@ -18,7 +16,7 @@ recommender_functions.language_decoder = language_decoder
 recommender_functions.director_decoder = director_decoder
 
 # Load data
-content_df = pd.read_csv("your_movie_dataset.csv")  # Replace with your actual file
+content_df = pd.read_csv("content_df.csv") 
 feature_cols = [
     'runtimeMinutes', 'director', 'originalLanguage',
     'Action', 'Adventure', 'Animation', 'Anime', 'Comedy', 'Crime',
