@@ -20,7 +20,7 @@ with open("director_decoder.pkl", "rb") as f:
 recommender_functions.language_decoder = language_decoder
 recommender_functions.director_decoder = director_decoder
 
-# --- Load Datasets ---
+# --- Load Content-Based Datasets ---
 content_df = pd.read_csv("content_df.csv")
 feature_cols = [
     'runtimeMinutes', 'director', 'originalLanguage',
@@ -38,6 +38,9 @@ if os.path.exists(collab_file):
     top_movies_collab_df = pd.read_csv(collab_file)
 else:
     top_movies_collab_df = pd.DataFrame(columns=["userName", "title", "standardized_score"])
+
+# --- Load NLP Dataset ---
+nlp_df = pd.read_csv("nlp_df.csv")
 
 # --- UI Title ---
 st.title("🎬 Movie Recommender System")
