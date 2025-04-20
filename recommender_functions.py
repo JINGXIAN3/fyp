@@ -358,23 +358,3 @@ def hybrid_recommender(user_id, movie_title, content_df, content_features, top_m
         hybrid_scores[movie] = hybrid_scores.get(movie, 0) + collab_weight * score
 
     return sorted(hybrid_scores.items(), key=lambda x: x[1], reverse=True)[:top_n]
-
-def evaluate_hybrid_recommender(recommendations, user_id, movie_title, content_df, content_features, k=20000):
-    movie_details = content_df[content_df['title'] == movie_title]
-    if movie_details.empty:
-        print(f"Cannot find details for movie '{movie_title}'")
-        return None
-    original = movie_details.iloc[0]
-    original_genres = [col for col in content_features.columns if col not in ['runtimeMinutes', 'director', 'originalLanguage'] and original.get(col, 0) == 1]
-    original_director = original['director']
-
-    relevant_movies = {
-        row['title'] for _, row in content_df.iterrows()
-        if any(row.get(g, 0) == 1 for g in original_genres) or row['director'] == original_director
-    }
-    relevant_movies.discard(movie_title)
-    recommended_movies = [m for m, _ in recommendations[:k]]
-
-    relevant_recommended = set(recommended_movies) & relevant_movies
-    precision = len(relevant_recommended) / len(recommended_movies) if recommended_movies else 0
-    return {f'precision@{k}': precision}
