@@ -132,9 +132,6 @@ elif method == "NLP-Based":
 elif method == "Hybrid":
     st.subheader("🎬 Hybrid Movie Recommender")
     
-    # Generate rating matrix from your top_movies_collab_df
-    rating_matrix = get_rating_matrix(top_movies_collab_df)
-
     has_id = st.radio("Do you have a user ID?", ("Yes", "No"))
 
     if has_id == "Yes":
@@ -145,7 +142,7 @@ elif method == "Hybrid":
             recommendations = hybrid_recommender(
                 user_id, movie_title,
                 content_df, content_features,
-                rating_matrix, top_movies_collab_df
+                top_movies_collab_df  # Passing the DataFrame directly
             )
 
             # Display recommendations
@@ -181,15 +178,25 @@ elif method == "Hybrid":
                 rating_matrix.loc[user_id] = [0] * rating_matrix.shape[1]
 
             # Update rating matrix with the new user's input
-            rating_matrix = update_rating_matrix(rating_matrix, user_id, [(movie1, score1), (movie2, score2)])
+            rating_matrix = update_rating_matrix(rating_matrix, user_id, [(movie1, score1/100), (movie2, score2/100)])
 
+            # Convert the updated rating_matrix back to top_movies_collab_df format
+            updated_df = []
+            for user in rating_matrix.index:
+                for movie in rating_matrix.columns:
+                    score = rating_matrix.loc[user, movie]
+                    if score > 0:
+                        updated_df.append({'userName': user, 'title': movie, 'standardized_score': score})
+            
+            temp_collab_df = pd.DataFrame(updated_df)
+            
             recommendations = hybrid_recommender(
                 user_id, movie1,
                 content_df, content_features,
-                rating_matrix, top_movies_collab_df
+                temp_collab_df  # Use the updated DataFrame
             )
 
-            # Display recommendations (same block as above)
+            # Display recommendations
             st.subheader("🔍 Recommendations")
             for idx, (title, score) in enumerate(recommendations, 1):
                 movie_info = content_df[content_df['title'] == title]
@@ -206,6 +213,8 @@ elif method == "Hybrid":
                     st.markdown("---")
 
             # Update top_movies_collab_df with the new rating entries
-            for movie in [movie1, movie2]:
-                new_row = {'userName': user_id, 'movie': movie}
-                top_movies_collab_df = pd.concat([top_movies_collab_df, pd.DataFrame([new_row])], ignore_index=True)
+            new_rows = [
+                {'userName': user_id, 'title': movie1, 'standardized_score': score1/100},
+                {'userName': user_id, 'title': movie2, 'standardized_score': score2/100}
+            ]
+            top_movies_collab_df = pd.concat([top_movies_collab_df, pd.DataFrame(new_rows)], ignore_index=True)
