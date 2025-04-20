@@ -293,14 +293,18 @@ def nlp_recommender(user_query, nlp_df, language_decoder, director_decoder, w2v_
 # ------------------------------------------------------------------------------------------
 
 # ------------------------------Hybrid Filtering--------------------------------------------
+
+# Function to get the next available user ID
 def get_next_user_id(rating_matrix):
     # Assumes index is user ID or can be converted to int
     existing_ids = rating_matrix.index.astype(int)
     return str(existing_ids.max() + 1)
 
+# Function to get the rating matrix from the DataFrame
 def get_rating_matrix(top_movies_collab_df):
     return top_movies_collab_df.pivot(index='userName', columns='title', values='standardized_score').fillna(0)
 
+# Function to update the rating matrix with the new user's ratings
 def update_rating_matrix(rating_matrix, user_id, liked_movies):
     # liked_movies = list of tuples: (movie_title, score)
     for title, rating in liked_movies:
@@ -309,17 +313,22 @@ def update_rating_matrix(rating_matrix, user_id, liked_movies):
         else:
             print(f"Warning: {title} not found in rating matrix.")
     return rating_matrix
-    
+
+# Hybrid Recommender Function
 def hybrid_recommender(user_id, movie_title, content_df, content_features, top_movies_collab_df,
                        content_weight=0.5, collab_weight=0.5, top_n=10):
+
+    # Normalize the weights for content and collaborative filtering
     total_weight = content_weight + collab_weight
     content_weight /= total_weight
     collab_weight /= total_weight
 
+    # Get content-based recommendations
     content_result = content_recommender(movie_title, content_df, content_features, top_n=top_n*2, input_type='title')
 
+    # Process content-based recommendations
     content_recommendations = {}
-    if not isinstance(content_result, str):
+    if not isinstance(content_result, str):  # Ensure result is not an error message
         content_recommendations = {
             rec['title']: rec['similarity_score'] 
             for rec in content_result['recommendations']
@@ -328,19 +337,26 @@ def hybrid_recommender(user_id, movie_title, content_df, content_features, top_m
             max_score = max(content_recommendations.values())
             content_recommendations = {m: (s / max_score) * 100 for m, s in content_recommendations.items()}
 
+    # Initialize collaborative filtering recommendations
     collab_recommendations = {}
-    rating_matrix = top_movies_collab_df.pivot(index='userName', columns='title', values='standardized_score').fillna(0)
+    # Get the rating matrix from the collaboration dataframe
+    rating_matrix = get_rating_matrix(top_movies_collab_df)
 
+    # Apply SVD for dimensionality reduction
     svd = TruncatedSVD(n_components=20, random_state=42)
     matrix_svd = svd.fit_transform(rating_matrix)
     similarity_matrix = cosine_similarity(matrix_svd)
 
+    # Check if the user_id exists in the rating matrix
     if user_id in rating_matrix.index:
         user_idx = rating_matrix.index.get_loc(user_id)
         user_similarity = similarity_matrix[user_idx]
-        similar_users_idx = np.argsort(user_similarity)[::-1]
+        similar_users_idx = np.argsort(user_similarity)[::-1]  # Get most similar users
+        
+        # Get movies already seen by the user
         user_seen = set(rating_matrix.loc[user_id][rating_matrix.loc[user_id] > 0].index)
 
+        # Collect recommendations from similar users
         for idx in similar_users_idx:
             if idx == user_idx:
                 continue
@@ -349,14 +365,18 @@ def hybrid_recommender(user_id, movie_title, content_df, content_features, top_m
                 if rating > 0 and movie not in user_seen:
                     collab_recommendations[movie] = collab_recommendations.get(movie, 0) + rating
 
+        # Normalize the collaborative recommendations
         if collab_recommendations:
             max_score = max(collab_recommendations.values())
             collab_recommendations = {m: (s / max_score) * 100 for m, s in collab_recommendations.items()}
 
+    # Combine content-based and collaborative recommendations using the specified weights
     hybrid_scores = {}
     for movie, score in content_recommendations.items():
         hybrid_scores[movie] = content_weight * score
     for movie, score in collab_recommendations.items():
         hybrid_scores[movie] = hybrid_scores.get(movie, 0) + collab_weight * score
 
+    # Return the top N movie recommendations sorted by hybrid score
     return sorted(hybrid_scores.items(), key=lambda x: x[1], reverse=True)[:top_n]
+
