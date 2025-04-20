@@ -298,6 +298,9 @@ def get_next_user_id(rating_matrix):
     existing_ids = rating_matrix.index.astype(int)
     return str(existing_ids.max() + 1)
 
+def get_rating_matrix(top_movies_collab_df):
+    return top_movies_collab_df.pivot(index='userName', columns='title', values='standardized_score').fillna(0)
+
 def update_rating_matrix(rating_matrix, user_id, liked_movies):
     # liked_movies = list of tuples: (movie_title, score)
     for title, rating in liked_movies:
