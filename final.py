@@ -101,7 +101,7 @@ if method == "Content-Based":
                 st.markdown("---")
 
 # === Collaborative Filtering ===
-elif method == "Collaborative Filtering":
+elif method == "Collaborative":
     st.subheader("👥 Collaborative Filtering")
     user_id = st.number_input("Enter User ID:", min_value=1, step=1)
 
