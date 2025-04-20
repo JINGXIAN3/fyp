@@ -47,7 +47,7 @@ st.title("🎬 Movie Recommender System")
 
 # --- Method Selection ---
 method = st.selectbox("Select Recommendation Method:", [
-    "Content-Based", "Collaborative Filtering", "NLP-Based","Hybrid"
+    "Content-Based", "Collaborative", "NLP-Based","Hybrid"
 ])
 
 # === Content-Based Filtering ===
