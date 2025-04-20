@@ -129,46 +129,60 @@ elif method == "NLP-Based":
 elif method == "Hybrid":
     st.subheader("🧠 Hybrid Filtering")
     st.markdown("#### 👤 User Setup")
-    user_id = st.text_input("Enter your username (for new or existing users):")
+    user_id = st.text_input("Enter your username (new or existing):")
 
-    st.markdown("#### 🎥 Pick 2 Movies You Like")
+    st.markdown("#### 🎥 Movie You Like")
     movie_list = sorted(content_df['title'].unique())
-    liked_movies = []
-    for i in range(1, 3):  # Change here to select only 2 movies
-        movie = st.selectbox(f"Select favorite movie {i}", movie_list, key=f"movie_{i}")
-        if movie:
-            liked_movies.append(movie)
+    movie_title = st.selectbox("Select a movie you like", movie_list)
 
-    if st.button("Confirm Favorites and Get Recommendations"):
-        new_rows = pd.DataFrame({
-            'userName': [user_id] * len(liked_movies),
-            'title': liked_movies,
-            'standardized_score': [100] * len(liked_movies)
-        })
-        top_movies_collab_df = pd.concat([top_movies_collab_df, new_rows], ignore_index=True).drop_duplicates(subset=['userName', 'title'], keep='last')
-        top_movies_collab_df.to_csv(collab_file, index=False)
+    if st.button("Get Hybrid Recommendations"):
+        if user_id and movie_title:
+            # Update user preferences for cold-start
+            new_row = pd.DataFrame({
+                'userName': [user_id],
+                'title': [movie_title],
+                'standardized_score': [100]
+            })
+            top_movies_collab_df = pd.concat([top_movies_collab_df, new_row], ignore_index=True).drop_duplicates(subset=['userName', 'title'], keep='last')
+            top_movies_collab_df.to_csv(collab_file, index=False)
 
-        hybrid_recs = hybrid_recommender(
-            user_id=user_id,
-            movie_title=liked_movies[0],  # First favorite movie
-            content_df=content_df,
-            content_features=content_features,
-            top_movies_collab_df=top_movies_collab_df
-        )
+            # Get hybrid recommendations
+            hybrid_recs = hybrid_recommender(
+                user_id=user_id,
+                movie_title=movie_title,
+                content_df=content_df,
+                content_features=content_features,
+                top_movies_collab_df=top_movies_collab_df,
+                content_weight=0.5,
+                collab_weight=0.5
+            )
 
-        st.subheader("🔍 Hybrid Recommendations")
-        for idx, (title, score) in enumerate(hybrid_recs, 1):
-            movie_info = content_df[content_df['title'] == title]
-            if not movie_info.empty:
-                movie = movie_info.iloc[0]
-                genres = [col for col in feature_cols if col not in ['runtimeMinutes', 'director', 'originalLanguage'] and movie.get(col, 0) == 1]
-                st.markdown(f"**{idx}. {title}**")
-                st.markdown(f"- Year: {movie.get('year', 'N/A')}")
-                st.markdown(f"- Genres: {', '.join(genres)}")
-                st.markdown(f"- Director: {director_decoder.get(movie.get('director'), 'Unknown')}")
-                st.markdown(f"- Language: {language_decoder.get(movie.get('originalLanguage'), 'Unknown')}")
-                st.markdown(f"- Runtime: {movie.get('runtimeMinutes', 'N/A')} minutes")
-                st.markdown(f"- TomatoMeter: {movie.get('tomatoMeter', 'N/A')}%")
-                st.markdown("---")
+            st.subheader("🔍 Hybrid Recommendations")
+            for idx, (title, score) in enumerate(hybrid_recs, 1):
+                movie_info = content_df[content_df['title'] == title]
+                if not movie_info.empty:
+                    movie = movie_info.iloc[0]
+                    genres = [col for col in feature_cols if col not in ['runtimeMinutes', 'director', 'originalLanguage'] and movie.get(col, 0) == 1]
+                    st.markdown(f"**{idx}. {title}**")
+                    st.markdown(f"- Year: {movie.get('year', 'N/A')}")
+                    st.markdown(f"- Genres: {', '.join(genres)}")
+                    st.markdown(f"- Director: {director_decoder.get(movie.get('director'), 'Unknown')}")
+                    st.markdown(f"- Language: {language_decoder.get(movie.get('originalLanguage'), 'Unknown')}")
+                    st.markdown(f"- Runtime: {movie.get('runtimeMinutes', 'N/A')} minutes")
+                    st.markdown(f"- TomatoMeter: {movie.get('tomatoMeter', 'N/A')}%")
+                    st.markdown("---")
 
+            # Evaluate recommendations
+            metrics = recommender_functions.evaluate_hybrid_recommender(
+                hybrid_recs,
+                user_id,
+                movie_title,
+                content_df,
+                content_features
+            )
+            if metrics:
+                precision_key = f'precision@{len(hybrid_recs)}'
+                st.markdown(f"**Precision@{len(hybrid_recs)}**: {metrics.get(precision_key, 0):.4f}")
+        else:
+            st.warning("Please enter a username and select a liked movie.")
 
