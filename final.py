@@ -11,6 +11,53 @@ from recommender_functions import (
     update_rating_matrix,
     hybrid_recommender,
 )
+import nltk
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+
+# Download NLTK resources if needed
+try:
+    nltk.data.find('tokenizers/punkt')
+except LookupError:
+    nltk.download('punkt')
+
+# --- Load or Download Word2Vec Model ---
+@st.cache_resource
+def get_word2vec_model():
+    """Load or download the Word2Vec model and cache it"""
+    import os
+    import pickle
+    
+    model_path = "w2v_model.pkl"
+    
+    # Check if model file exists
+    if os.path.exists(model_path):
+        try:
+            # Load existing model
+            with open(model_path, 'rb') as f:
+                st.info("Loading Word2Vec model from cache...")
+                return pickle.load(f)
+        except Exception as e:
+            st.warning(f"Failed to load cached model: {e}")
+    
+    # Download model if not cached
+    try:
+        st.info("Downloading Word2Vec model (this may take a few minutes)...")
+        import gensim.downloader as api
+        model = api.load("glove-wiki-gigaword-300")
+        
+        # Try to save the model for future use
+        try:
+            with open(model_path, 'wb') as f:
+                pickle.dump(model, f)
+            st.success("Word2Vec model cached for future use")
+        except Exception as e:
+            st.warning(f"Couldn't save model to disk: {e}")
+        
+        return model
+    except Exception as e:
+        st.error(f"Failed to download Word2Vec model: {e}")
+        return None
 
 # --- Load Decoders ---
 with open("language_decoder.pkl", "rb") as f:
@@ -22,6 +69,12 @@ with open("director_decoder.pkl", "rb") as f:
 import recommender_functions
 recommender_functions.language_decoder = language_decoder
 recommender_functions.director_decoder = director_decoder
+
+# Try to get the model and add it to recommender_functions
+try:
+    recommender_functions.w2v_model = get_word2vec_model()
+except Exception as e:
+    st.warning(f"Error setting up Word2Vec model: {e}")
 
 # --- Load Content-Based Datasets ---
 content_df = pd.read_csv("content_df.csv")
@@ -125,12 +178,48 @@ elif method == "NLP-Based":
     if st.button("Get Recommendations"):
         # Check if w2v_model is defined in the recommender_functions module
         if not hasattr(recommender_functions, 'w2v_model'):
-            st.error("Word2Vec model is not loaded. Please make sure to load it first.")
+            st.warning("Word2Vec model is not loaded. Using TF-IDF only for recommendations.")
+            
+            # Simple TF-IDF based recommendation as fallback
+            # Create a simple text feature for comparison
+            nlp_df['movie_info'] = nlp_df['movie_info'].fillna('')
+            
+            # Create TF-IDF vectors
+            tfidf_vectorizer = TfidfVectorizer(stop_words='english')
+            tfidf_matrix = tfidf_vectorizer.fit_transform(nlp_df['movie_info'])
+            
+            # Transform user query
+            query_vector = tfidf_vectorizer.transform([description])
+            
+            # Calculate similarity
+            similarity_scores = cosine_similarity(query_vector, tfidf_matrix).flatten()
+            
+            # Rank movies by similarity
+            nlp_df['similarity'] = similarity_scores
+            top_recommendations = nlp_df.sort_values('similarity', ascending=False).head(10)
+            
+            # Display recommendations
+            st.subheader("🔍 Recommendations (TF-IDF only)")
+            for idx, rec in enumerate(top_recommendations.itertuples(), 1):
+                genres = [col for col in feature_cols if col not in ['runtimeMinutes', 'director', 'originalLanguage'] and getattr(rec, col, 0) == 1]
+                st.markdown(f"**{idx}. {rec.title}** - Similarity: {rec.similarity:.2f}")
+                st.markdown(f"- Year: {getattr(rec, 'year', 'N/A')}")
+                st.markdown(f"- Genres: {', '.join(genres)}")
+                st.markdown(f"- Director: {director_decoder.get(getattr(rec, 'director', ''), 'Unknown')}")
+                st.markdown(f"- Language: {language_decoder.get(getattr(rec, 'originalLanguage', ''), 'Unknown')}")
+                st.markdown("---")
         else:
+            # If Word2Vec is available, use the full NLP recommender
             recs = nlp_recommender(description, nlp_df, language_decoder, director_decoder, recommender_functions.w2v_model)
             st.subheader("🔍 Recommendations")
             for idx, rec in enumerate(recs.itertuples(), 1):
-                st.markdown(f"**{idx}. {rec.title}** - Similarity Score: {rec.similarity:.2f}")
+                genres = [col for col in feature_cols if col not in ['runtimeMinutes', 'director', 'originalLanguage'] and getattr(rec, col, 0) == 1]
+                st.markdown(f"**{idx}. {rec.title}** - Similarity: {rec.similarity:.2f}")
+                st.markdown(f"- Year: {getattr(rec, 'year', 'N/A')}")
+                st.markdown(f"- Genres: {', '.join(genres)}")
+                st.markdown(f"- Director: {director_decoder.get(getattr(rec, 'director', ''), 'Unknown')}")
+                st.markdown(f"- Language: {language_decoder.get(getattr(rec, 'originalLanguage', ''), 'Unknown')}")
+                st.markdown("---")
             
 # === Hybrid Filtering ===
 elif method == "Hybrid":
