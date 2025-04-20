@@ -5,4 +5,4 @@ matplotlib
 scikit-learn==1.6.1
 nltk
 gensim==4.3.1
-scipy==1.10.1
+scipy==1.9.3 
