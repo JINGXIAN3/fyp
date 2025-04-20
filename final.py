@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 import pickle
 import os
-import recommender_functions
 from recommender_functions import (
     content_recommender,
     collaborative_recommender,
@@ -19,7 +18,8 @@ with open("language_decoder.pkl", "rb") as f:
 with open("director_decoder.pkl", "rb") as f:
     director_decoder = pickle.load(f)
 
-# Inject decoders into functions module
+# Inject decoders into recommender_functions module
+import recommender_functions
 recommender_functions.language_decoder = language_decoder
 recommender_functions.director_decoder = director_decoder
 
@@ -50,7 +50,7 @@ st.title("🎬 Movie Recommender System")
 
 # --- Method Selection ---
 method = st.selectbox("Select Recommendation Method:", [
-    "Content-Based", "Collaborative", "NLP-Based","Hybrid"
+    "Content-Based", "Collaborative", "NLP-Based", "Hybrid"
 ])
 
 # === Content-Based Filtering ===
@@ -123,16 +123,20 @@ elif method == "NLP-Based":
     description = st.text_area("Describe the type of movie you want to watch:")
     
     if st.button("Get Recommendations"):
-        recs = nlp_recommender(description, nlp_df, language_decoder, director_decoder, w2v_model)
-        st.subheader("🔍 Recommendations")
-        for idx, rec in enumerate(recs.itertuples(), 1):
-            st.markdown(f"**{idx}. {rec.title}** - Similarity Score: {rec.similarity:.2f}")
+        # Check if w2v_model is defined in the recommender_functions module
+        if not hasattr(recommender_functions, 'w2v_model'):
+            st.error("Word2Vec model is not loaded. Please make sure to load it first.")
+        else:
+            recs = nlp_recommender(description, nlp_df, language_decoder, director_decoder, recommender_functions.w2v_model)
+            st.subheader("🔍 Recommendations")
+            for idx, rec in enumerate(recs.itertuples(), 1):
+                st.markdown(f"**{idx}. {rec.title}** - Similarity Score: {rec.similarity:.2f}")
             
 # === Hybrid Filtering ===
 elif method == "Hybrid":
     st.subheader("🎬 Hybrid Movie Recommender")
     
-    # Generate rating matrix from top_movies_collab_df - MOVED THIS LINE HERE
+    # Generate rating matrix from top_movies_collab_df
     rating_matrix = get_rating_matrix(top_movies_collab_df)
     
     has_id = st.radio("Do you have a user ID?", ("Yes", "No"))
@@ -145,7 +149,7 @@ elif method == "Hybrid":
             recommendations = hybrid_recommender(
                 user_id, movie_title,
                 content_df, content_features,
-                top_movies_collab_df  # Passing the DataFrame directly
+                top_movies_collab_df
             )
 
             # Display recommendations
@@ -165,7 +169,7 @@ elif method == "Hybrid":
                     st.markdown("---")
 
     else:
-        user_id = get_next_user_id(rating_matrix)  # Now rating_matrix is defined
+        user_id = get_next_user_id(rating_matrix)  # Auto-assign new user ID
         st.success(f"Your new user ID is: {user_id}")
         
         st.write("Select **two** movies you like and rate them (0-100):")
@@ -178,7 +182,7 @@ elif method == "Hybrid":
 
         if st.button("Get Hybrid Recommendations"):
             if user_id not in rating_matrix.index:
-                rating_matrix.loc[user_id] = [0] * rating_matrix.shape[1]
+                rating_matrix.loc[user_id] = [0] * len(rating_matrix.columns)
 
             # Update rating matrix with the new user's input
             rating_matrix = update_rating_matrix(rating_matrix, user_id, [(movie1, score1/100), (movie2, score2/100)])
