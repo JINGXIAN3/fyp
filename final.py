@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 import pickle
 import os
-import gensim.downloader as api
 import recommender_functions
 from recommender_functions import (
     content_recommender,
