@@ -316,12 +316,16 @@ def update_rating_matrix(rating_matrix, user_id, liked_movies):
 
 # Hybrid Recommender Function
 def hybrid_recommender(user_id, movie_title, content_df, content_features, top_movies_collab_df,
-                       content_weight=0.5, collab_weight=0.5, top_n=10):
-
+                      content_weight=0.5, collab_weight=0.5, top_n=10):
+    
+    # Ensure weights are float scalars
+    content_weight = float(content_weight)
+    collab_weight = float(collab_weight)
+    
     # Normalize the weights for content and collaborative filtering
     total_weight = content_weight + collab_weight
-    content_weight /= total_weight
-    collab_weight /= total_weight
+    content_weight = content_weight / total_weight
+    collab_weight = collab_weight / total_weight
 
     # Get content-based recommendations
     content_result = content_recommender(movie_title, content_df, content_features, top_n=top_n*2, input_type='title')
@@ -339,6 +343,7 @@ def hybrid_recommender(user_id, movie_title, content_df, content_features, top_m
 
     # Initialize collaborative filtering recommendations
     collab_recommendations = {}
+    
     # Get the rating matrix from the collaboration dataframe
     rating_matrix = get_rating_matrix(top_movies_collab_df)
 
@@ -379,4 +384,3 @@ def hybrid_recommender(user_id, movie_title, content_df, content_features, top_m
 
     # Return the top N movie recommendations sorted by hybrid score
     return sorted(hybrid_scores.items(), key=lambda x: x[1], reverse=True)[:top_n]
-
