@@ -293,7 +293,7 @@ def nlp_recommender(user_query, nlp_df, language_decoder, director_decoder, w2v_
 # ------------------------------------------------------------------------------------------
 
 # ------------------------------Hybrid Filtering--------------------------------------------
-def hybrid_recommender(user_id, movie_title, content_df, content_features, top_movies_collab_df, 
+def hybrid_recommender(user_id, movie_title, content_df, content_features, top_movies_collab_df,
                        content_weight=0.5, collab_weight=0.5, top_n=10):
     total_weight = content_weight + collab_weight
     content_weight /= total_weight
@@ -344,34 +344,6 @@ def hybrid_recommender(user_id, movie_title, content_df, content_features, top_m
 
     return sorted(hybrid_scores.items(), key=lambda x: x[1], reverse=True)[:top_n]
 
-def show_hybrid_recommendations(recommendations, content_df, content_features, user_movie):
-    movie_details = content_df[content_df['title'] == user_movie]
-    if not movie_details.empty:
-        details = movie_details.iloc[0]
-        print("\n===== Movie You Liked =====")
-        print(f"Title: {details['title']}")
-        print(f"Year: {details.get('year', 'N/A')}")
-        genres = [col for col in content_features.columns if col not in ['runtimeMinutes', 'director', 'originalLanguage'] and details.get(col, 0) == 1]
-        print(f"Genres: {', '.join(genres)}")
-        print(f"Director: {director_decoder.get(details.get('director', 'Unknown'), 'Unknown')}")
-        print(f"Language: {language_decoder.get(details.get('originalLanguage', 'Unknown'), 'Unknown')}")
-        print(f"Runtime: {details.get('runtimeMinutes', 'N/A')} minutes")
-        print(f"TomatoMeter: {details.get('tomatoMeter', 'N/A')}%")
-        
-    print("\n===== Hybrid Recommendations =====")
-    for i, (movie, score) in enumerate(recommendations, 1):
-        details = content_df[content_df['title'] == movie].iloc[0] if not content_df[content_df['title'] == movie].empty else {}
-        print(f"{i}. {movie}")
-        if isinstance(details, pd.Series):
-            print(f"   Year: {details.get('year', 'N/A')}")
-            genres = [col for col in content_features.columns if col not in ['runtimeMinutes', 'director', 'originalLanguage'] and details.get(col, 0) == 1]
-            print(f"   Genres: {', '.join(genres)}")
-            print(f"   Director: {director_decoder.get(details.get('director', 'Unknown'), 'Unknown')}")
-            print(f"   Language: {language_decoder.get(details.get('originalLanguage', 'Unknown'), 'Unknown')}")
-            print(f"   Runtime: {details.get('runtimeMinutes', 'N/A')} minutes")
-            print(f"   TomatoMeter: {details.get('tomatoMeter', 'N/A')}%")
-        print("---")
-
 def evaluate_hybrid_recommender(recommendations, user_id, movie_title, content_df, content_features, k=20000):
     movie_details = content_df[content_df['title'] == movie_title]
     if movie_details.empty:
@@ -391,87 +363,3 @@ def evaluate_hybrid_recommender(recommendations, user_id, movie_title, content_d
     relevant_recommended = set(recommended_movies) & relevant_movies
     precision = len(relevant_recommended) / len(recommended_movies) if recommended_movies else 0
     return {f'precision@{k}': precision}
-
-def hybrid_menu(content_df, content_features, top_movies_collab_df):
-    print("------------------------")
-    print("Hybrid Movie Recommender")
-    print("------------------------")
-
-    while True:
-        has_user = input("Do you have a user ID? (Y/N): ").strip().upper()
-
-        if has_user == 'Y':
-            while True:
-                user_id = input("Enter your user ID: ").strip()
-                if user_id in top_movies_collab_df['userName'].astype(str).values:
-                    break
-                else:
-                    print(f"User ID '{user_id}' not found. Please try again.")
-
-            while True:
-                movie_title = input("Enter a movie you like: ").strip()
-                if movie_title.lower() in content_df['title'].str.lower().values:
-                    break
-                else:
-                    print(f"Movie '{movie_title}' not found. Please try again.")
-
-            recommendations = hybrid_recommender(
-                user_id, movie_title, content_df, content_features, top_movies_collab_df,
-                content_weight=0.5, collab_weight=0.5
-            )
-
-            show_hybrid_recommendations(recommendations, content_df, content_features, movie_title)
-
-            metrics = evaluate_hybrid_recommender(recommendations, user_id, movie_title, content_df, content_features)
-            if metrics:
-                print("\n===== Evaluation Metrics =====")
-                for k, v in metrics.items():
-                    print(f"{k}: {v:.4f}")
-            break
-
-        elif has_user == 'N':
-            user_id = int(top_movies_collab_df['userName'].astype(str).astype(int).max()) + 1
-            print(f"\nYou're a new user. We'll assign you the ID: {user_id}")
-
-            liked_movies = []
-            while len(liked_movies) < 2:
-                movie = input(f"Enter a movie you like ({len(liked_movies)+1}/2): ").strip()
-                if movie.lower() in content_df['title'].str.lower().values:
-                    while True:
-                        try:
-                            rating = float(input(f"Enter your rating for '{movie}' (0-100): ").strip())
-                            if 0 <= rating <= 100:
-                                liked_movies.append((movie, rating))
-                                break
-                            else:
-                                print("Please enter a rating between 0 and 100.")
-                        except ValueError:
-                            print("Please enter a valid number.")
-                else:
-                    print(f"Movie '{movie}' not found in our database. Please try another one.")
-
-            new_ratings = [{'userName': user_id, 'title': movie, 'standardized_score': rating} for movie, rating in liked_movies]
-            top_movies_collab_df = pd.concat([top_movies_collab_df, pd.DataFrame(new_ratings)], ignore_index=True)
-
-            print("\nThank you! We will now proceed with personalized recommendations.")
-            movie_title = liked_movies[0][0]
-
-            recommendations = hybrid_recommender(
-                user_id, movie_title, content_df, content_features, top_movies_collab_df,
-                content_weight=0.5, collab_weight=0.5
-            )
-
-            show_hybrid_recommendations(recommendations, content_df, content_features, movie_title)
-
-            metrics = evaluate_hybrid_recommender(recommendations, user_id, movie_title, content_df, content_features)
-            if metrics:
-                print("\n===== Evaluation Metrics =====")
-                for k, v in metrics.items():
-                    print(f"{k}: {v:.4f}")
-
-            break
-
-        else:
-            print("Please enter 'Y' or 'N'.")
-
-    return top_movies_collab_df
