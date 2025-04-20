@@ -8,6 +8,7 @@ from recommender_functions import (
     collaborative_recommender,
     nlp_recommender,
     get_next_user_id,
+    get_rating_matrix,
     update_rating_matrix,
     hybrid_recommender,
 )
