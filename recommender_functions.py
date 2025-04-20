@@ -293,6 +293,21 @@ def nlp_recommender(user_query, nlp_df, language_decoder, director_decoder, w2v_
 # ------------------------------------------------------------------------------------------
 
 # ------------------------------Hybrid Filtering--------------------------------------------
+def get_next_user_id(rating_matrix):
+    # Assumes index is user ID or can be converted to int
+    existing_ids = rating_matrix.index.astype(int)
+    return str(existing_ids.max() + 1)
+
+
+def update_rating_matrix(rating_matrix, user_id, liked_movies):
+    # liked_movies = list of tuples: (movie_title, score)
+    for title, rating in liked_movies:
+        if title in rating_matrix.columns:
+            rating_matrix.loc[user_id, title] = rating
+        else:
+            print(f"Warning: {title} not found in rating matrix.")
+    return rating_matrix
+    
 def hybrid_recommender(user_id, movie_title, content_df, content_features, top_movies_collab_df,
                        content_weight=0.5, collab_weight=0.5, top_n=10):
     total_weight = content_weight + collab_weight
