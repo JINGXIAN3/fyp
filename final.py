@@ -42,10 +42,6 @@ else:
 # --- Load NLP Dataset ---
 nlp_df = pd.read_csv("nlp_df.csv")
 
-
-# ---Load pre-trained GloVe model---
-w2v_model = api.load("glove-wiki-gigaword-300")
-
 # --- UI Title ---
 st.title("🎬 Movie Recommender System")
 
