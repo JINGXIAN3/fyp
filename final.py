@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import pickle
 import os
+import gensim.downloader as api
 import recommender_functions
 from recommender_functions import (
     content_recommender,
@@ -41,6 +42,10 @@ else:
 
 # --- Load NLP Dataset ---
 nlp_df = pd.read_csv("nlp_df.csv")
+
+
+# ---Load pre-trained GloVe model---
+w2v_model = api.load("glove-wiki-gigaword-300")
 
 # --- UI Title ---
 st.title("🎬 Movie Recommender System")
