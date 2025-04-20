@@ -4,3 +4,4 @@ pandas
 matplotlib
 scikit-learn==1.6.1
 nltk
+gensim
