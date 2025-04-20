@@ -132,6 +132,9 @@ elif method == "NLP-Based":
 elif method == "Hybrid":
     st.subheader("🎬 Hybrid Movie Recommender")
     
+    # Generate rating matrix from top_movies_collab_df - MOVED THIS LINE HERE
+    rating_matrix = get_rating_matrix(top_movies_collab_df)
+    
     has_id = st.radio("Do you have a user ID?", ("Yes", "No"))
 
     if has_id == "Yes":
@@ -162,7 +165,7 @@ elif method == "Hybrid":
                     st.markdown("---")
 
     else:
-        user_id = get_next_user_id(rating_matrix)  # Auto-assign new user ID
+        user_id = get_next_user_id(rating_matrix)  # Now rating_matrix is defined
         st.success(f"Your new user ID is: {user_id}")
         
         st.write("Select **two** movies you like and rate them (0-100):")
