@@ -165,19 +165,40 @@ def collaborative_recommender(user_id, ratings_df, top_n=10):
     user_seen_movies = set(rating_matrix.loc[user_id][rating_matrix.loc[user_id] > 0].index)
     recommendations = {}
 
-    for idx in np.argsort(user_similarity)[::-1]:
-        similar_user_ratings = rating_matrix.iloc[idx]
-        for movie, rating in similar_user_ratings.items():
-            if rating > 0 and movie not in user_seen_movies:
-                recommendations[movie] = recommendations.get(movie, 0) + rating
+    for sim_user_id, _ in similar_users:
+        sim_user_ratings = rating_matrix.loc[sim_user_id]
+        sim_user_seen = set(sim_user_ratings[sim_user_ratings > 0].index)
+        shared_movies = user_seen_movies.intersection(sim_user_seen)
+        unseen_movies = sim_user_seen - user_seen_movies
 
+        for movie in unseen_movies:
+            rating = sim_user_ratings[movie]
+            if rating > 0:
+                if movie not in recommendations:
+                    recommendations[movie] = {
+                        "score": 0,
+                        "explanations": []
+                    }
+                recommendations[movie]["score"] += rating
+                recommendations[movie]["explanations"].append(
+                    f"Because you and User {sim_user_id} both liked {', '.join(shared_movies)}, "
+                    f"and they also liked '{movie}'"
+                )
+
+    # Normalize scores and sort
     if recommendations:
-        max_score = max(recommendations.values())
-        normalized = {movie: (score / max_score) * 100 for movie, score in recommendations.items()}
-        sorted_recommendations = sorted(normalized.items(), key=lambda x: x[1], reverse=True)
-        explanation["recommendations"] = [{"title": title, "score": score} for title, score in sorted_recommendations[:top_n]]
+        max_score = max([val["score"] for val in recommendations.values()])
+        sorted_recommendations = sorted(recommendations.items(), key=lambda x: x[1]["score"], reverse=True)
+
+        for title, info in sorted_recommendations[:top_n]:
+            explanation["recommendations"].append({
+                "title": title,
+                "score": (info["score"] / max_score) * 100,
+                "reason": info["explanations"][0]  # Show one main reason
+            })
 
     return explanation
+
 # ------------------------------------------------------------------------------------------
 
 # ------------------------------NLP-Based Filtering------------------------------------------
