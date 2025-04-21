@@ -21,44 +21,6 @@ try:
 except LookupError:
     nltk.download('punkt')
 
-# --- Load or Download Word2Vec Model ---
-@st.cache_resource
-def get_word2vec_model():
-    """Load or download the Word2Vec model and cache it"""
-    import os
-    import pickle
-    
-    model_path = "w2v_model.pkl"
-    
-    # Check if model file exists
-    if os.path.exists(model_path):
-        try:
-            # Load existing model
-            with open(model_path, 'rb') as f:
-                st.info("Loading Word2Vec model from cache...")
-                return pickle.load(f)
-        except Exception as e:
-            st.warning(f"Failed to load cached model: {e}")
-    
-    # Download model if not cached
-    try:
-        st.info("Downloading Word2Vec model (this may take a few minutes)...")
-        import gensim.downloader as api
-        model = api.load("glove-wiki-gigaword-300")
-        
-        # Try to save the model for future use
-        try:
-            with open(model_path, 'wb') as f:
-                pickle.dump(model, f)
-            st.success("Word2Vec model cached for future use")
-        except Exception as e:
-            st.warning(f"Couldn't save model to disk: {e}")
-        
-        return model
-    except Exception as e:
-        st.error(f"Failed to download Word2Vec model: {e}")
-        return None
-
 # --- Load Decoders ---
 with open("language_decoder.pkl", "rb") as f:
     language_decoder = pickle.load(f)
