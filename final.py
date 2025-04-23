@@ -229,31 +229,38 @@ elif method == "Hybrid":
         movie_title = st.selectbox("Select a movie you like:", sorted(content_df['title'].unique()))
 
         if st.button("Get Hybrid Recommendations"):
-            recommendations = hybrid_recommender(
-                user_id, movie_title,
-                content_df, content_features,
-                top_movies_collab_df
-            )
+            with st.spinner("Finding recommendations..."):
+                recommendations = hybrid_recommender(
+                    user_id, movie_title,
+                    content_df, content_features,
+                    top_movies_collab_df
+                )
 
-            # Display recommendations
-            st.subheader("🔍 Recommendations")
-            for idx, (title, score) in enumerate(recommendations, 1):
-                movie_info = content_df[content_df['title'] == title]
-                if not movie_info.empty:
-                    movie = movie_info.iloc[0]
-                    genres = [col for col in feature_cols if col not in ['runtimeMinutes', 'director', 'originalLanguage'] and movie.get(col, 0) == 1]
-                    st.markdown(f"**{idx}. {title}**")
-                    st.markdown(f"- Year: {movie.get('year', 'N/A')}")
-                    st.markdown(f"- Genres: {', '.join(genres)}")
-                    st.markdown(f"- Director: {director_decoder.get(movie.get('director'), 'Unknown')}")
-                    st.markdown(f"- Language: {language_decoder.get(movie.get('originalLanguage'), 'Unknown')}")
-                    st.markdown(f"- Runtime: {movie.get('runtimeMinutes', 'N/A')} minutes")
-                    st.markdown(f"- TomatoMeter: {movie.get('tomatoMeter', 'N/A')}%")
-                    st.markdown("---")
+                # Display recommendations
+                st.subheader("🔍 Recommendations")
+                for idx, (title, score) in enumerate(recommendations, 1):
+                    movie_info = content_df[content_df['title'] == title]
+                    if not movie_info.empty:
+                        movie = movie_info.iloc[0]
+                        genres = [col for col in feature_cols if col not in ['runtimeMinutes', 'director', 'originalLanguage'] and movie.get(col, 0) == 1]
+                        st.markdown(f"**{idx}. {title}**")
+                        st.markdown(f"- Genres: {', '.join(genres)}")
+                        st.markdown(f"- Year: {movie.get('year', 'N/A')}")
+                        st.markdown(f"- Director: {director_decoder.get(movie.get('director'), 'Unknown')}")
+                        st.markdown(f"- Language: {language_decoder.get(movie.get('originalLanguage'), 'Unknown')}")
+                        st.markdown(f"- Runtime: {movie.get('runtimeMinutes', 'N/A')} minutes")
+                        st.markdown(f"- TomatoMeter: {movie.get('tomatoMeter', 'N/A')}%")
+                        st.markdown("---")
 
     else:
-        user_id = get_next_user_id(rating_matrix)  # Auto-assign new user ID
-        st.success(f"Your new user ID is: {user_id}")
+        try:
+            # Try to get next user ID safely
+            user_id = get_next_user_id(rating_matrix)
+            st.success(f"Your new user ID is: {user_id}")
+        except Exception as e:
+            # Fallback if there's an issue getting next ID
+            st.warning("Could not generate a new user ID. Using default ID 999.")
+            user_id = "999"
         
         st.write("Select **two** movies you like and rate them (0-100):")
 
@@ -264,41 +271,45 @@ elif method == "Hybrid":
         score2 = st.slider("Score for Movie 2:", 0, 100, 90, key="score2")
 
         if st.button("Get Hybrid Recommendations"):
-            if user_id not in rating_matrix.index:
-                rating_matrix.loc[user_id] = [0] * len(rating_matrix.columns)
+            with st.spinner("Creating your profile and finding recommendations..."):
+                # Create a minimal rating matrix for the new user to improve performance
+                # Only add a new row for this user instead of modifying the entire matrix
+                new_ratings = [(movie1, score1/100), (movie2, score2/100)]
+                
+                # Create a temporary DataFrame for the new user's ratings
+                temp_user_df = pd.DataFrame([
+                    {'userName': user_id, 'title': title, 'standardized_score': score}
+                    for title, score in new_ratings
+                ])
+                
+                # Combine with existing ratings
+                temp_collab_df = pd.concat([top_movies_collab_df, temp_user_df], ignore_index=True)
+                
+                # Use content-based recommendations as primary method for new users
+                # with a smaller collaborative component
+                recommendations = hybrid_recommender(
+                    user_id, movie1,
+                    content_df, content_features,
+                    temp_collab_df,
+                    content_weight=0.8,  # Increase content weight for new users
+                    collab_weight=0.2    # Decrease collab weight for new users
+                )
 
-            # Update rating matrix with the new user's input
-            rating_matrix = update_rating_matrix(rating_matrix, user_id, [(movie1, score1/100), (movie2, score2/100)])
+                # Display recommendations
+                st.subheader("🔍 Recommendations")
+                for idx, (title, score) in enumerate(recommendations, 1):
+                    movie_info = content_df[content_df['title'] == title]
+                    if not movie_info.empty:
+                        movie = movie_info.iloc[0]
+                        genres = [col for col in feature_cols if col not in ['runtimeMinutes', 'director', 'originalLanguage'] and movie.get(col, 0) == 1]
+                        st.markdown(f"**{idx}. {title}**")
+                        st.markdown(f"- Genres: {', '.join(genres)}")
+                        st.markdown(f"- Year: {movie.get('year', 'N/A')}")
+                        st.markdown(f"- Director: {director_decoder.get(movie.get('director'), 'Unknown')}")
+                        st.markdown(f"- Language: {language_decoder.get(movie.get('originalLanguage'), 'Unknown')}")
+                        st.markdown(f"- Runtime: {movie.get('runtimeMinutes', 'N/A')} minutes")
+                        st.markdown(f"- TomatoMeter: {movie.get('tomatoMeter', 'N/A')}%")
+                        st.markdown("---")
 
-            # Convert the updated rating_matrix back to top_movies_collab_df format
-            updated_df = []
-            for user in rating_matrix.index:
-                for movie in rating_matrix.columns:
-                    score = rating_matrix.loc[user, movie]
-                    if score > 0:
-                        updated_df.append({'userName': user, 'title': movie, 'standardized_score': score})
-            
-            temp_collab_df = pd.DataFrame(updated_df)
-            
-            recommendations = hybrid_recommender(
-                user_id, movie1,
-                content_df, content_features,
-                temp_collab_df  # Use the updated DataFrame
-            )
-
-            # Display recommendations
-            st.subheader("🔍 Recommendations")
-            for idx, (title, score) in enumerate(recommendations, 1):
-                movie_info = content_df[content_df['title'] == title]
-                if not movie_info.empty:
-                    movie = movie_info.iloc[0]
-                    genres = [col for col in feature_cols if col not in ['runtimeMinutes', 'director', 'originalLanguage'] and movie.get(col, 0) == 1]
-                    st.markdown(f"**{idx}. {title}**")
-                    st.markdown(f"- Year: {movie.get('year', 'N/A')}")
-                    st.markdown(f"- Genres: {', '.join(genres)}")
-                    st.markdown(f"- Director: {director_decoder.get(movie.get('director'), 'Unknown')}")
-                    st.markdown(f"- Language: {language_decoder.get(movie.get('originalLanguage'), 'Unknown')}")
-                    st.markdown(f"- Runtime: {movie.get('runtimeMinutes', 'N/A')} minutes")
-                    st.markdown(f"- TomatoMeter: {movie.get('tomatoMeter', 'N/A')}%")
-                    st.markdown("---")
-
+                # Update persistent storage only after displaying results
+                top_movies_collab_df = temp_collab_df.copy()
