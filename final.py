@@ -160,6 +160,7 @@ elif method == "Collaborative":
                 st.markdown(f"**{idx}. {rec['title']}** - {rec['score']:.2f} %")
 
 # === NLP-Based Filtering ===
+# === NLP-Based Filtering ===
 elif method == "NLP-Based":
     st.subheader("💬 NLP-Based Filtering")
     description = st.text_area("Describe the type of movie you want to watch:")
@@ -188,10 +189,10 @@ elif method == "NLP-Based":
             top_recommendations = nlp_df.sort_values('similarity', ascending=False).head(10)
             
             # Display recommendations
-            st.subheader("🔍 Recommendations ")
+            st.subheader("🔍 Recommendations")
             for idx, rec in enumerate(top_recommendations.itertuples(), 1):
                 genres = [col for col in feature_cols if col not in ['runtimeMinutes', 'director', 'originalLanguage'] and getattr(rec, col, 0) == 1]
-                st.markdown(f"**{idx}. {rec.title}** - Similarity: {rec.similarity:.2f}")
+                st.markdown(f"**{idx}. {rec.title}**")
                 st.markdown(f"- Genres: {', '.join(genres)}")
                 st.markdown(f"- Year: {getattr(rec, 'year', 'N/A')}")
                 st.markdown(f"- Director: {director_decoder.get(getattr(rec, 'director', ''), 'Unknown')}")
@@ -205,7 +206,7 @@ elif method == "NLP-Based":
             st.subheader("🔍 Recommendations")
             for idx, rec in enumerate(recs.itertuples(), 1):
                 genres = [col for col in feature_cols if col not in ['runtimeMinutes', 'director', 'originalLanguage'] and getattr(rec, col, 0) == 1]
-                st.markdown(f"**{idx}. {rec.title}** - Similarity: {rec.similarity:.2f}")
+                st.markdown(f"**{idx}. {rec.title}**")
                 st.markdown(f"- Genres: {', '.join(genres)}")
                 st.markdown(f"- Year: {getattr(rec, 'year', 'N/A')}")
                 st.markdown(f"- Director: {director_decoder.get(getattr(rec, 'director', ''), 'Unknown')}")
