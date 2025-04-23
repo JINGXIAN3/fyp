@@ -191,7 +191,7 @@ elif method == "NLP-Based":
             st.subheader("🔍 Recommendations ")
             for idx, rec in enumerate(top_recommendations.itertuples(), 1):
                 genres = [col for col in feature_cols if col not in ['runtimeMinutes', 'director', 'originalLanguage'] and getattr(rec, col, 0) == 1]
-                st.markdown(f"**{idx}. {rec.title}** - Similarity: {rec.similarity:.2f}")
+                st.markdown(f"**{idx}. {rec['title']}**")
                 st.markdown(f"- Genres: {', '.join(genres)}")
                 st.markdown(f"- Year: {getattr(rec, 'year', 'N/A')}")
                 st.markdown(f"- Director: {director_decoder.get(getattr(rec, 'director', ''), 'Unknown')}")
@@ -205,7 +205,7 @@ elif method == "NLP-Based":
             st.subheader("🔍 Recommendations")
             for idx, rec in enumerate(recs.itertuples(), 1):
                 genres = [col for col in feature_cols if col not in ['runtimeMinutes', 'director', 'originalLanguage'] and getattr(rec, col, 0) == 1]
-                st.markdown(f"**{idx}. {rec.title}** - Similarity: {rec.similarity:.2f}")
+                st.markdown(f"**{idx}. {rec['title']}**")
                 st.markdown(f"- Genres: {', '.join(genres)}")
                 st.markdown(f"- Year: {getattr(rec, 'year', 'N/A')}")
                 st.markdown(f"- Director: {director_decoder.get(getattr(rec, 'director', ''), 'Unknown')}")
