@@ -32,12 +32,6 @@ import recommender_functions
 recommender_functions.language_decoder = language_decoder
 recommender_functions.director_decoder = director_decoder
 
-# Try to get the model and add it to recommender_functions
-try:
-    recommender_functions.w2v_model = get_word2vec_model()
-except Exception as e:
-    st.warning(f"Error setting up Word2Vec model: {e}")
-
 # --- Load Content-Based Datasets ---
 content_df = pd.read_csv("content_df.csv")
 feature_cols = [
