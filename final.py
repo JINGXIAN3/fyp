@@ -302,9 +302,3 @@ elif method == "Hybrid":
                     st.markdown(f"- TomatoMeter: {movie.get('tomatoMeter', 'N/A')}%")
                     st.markdown("---")
 
-            # Update top_movies_collab_df with the new rating entries
-            new_rows = [
-                {'userName': user_id, 'title': movie1, 'standardized_score': score1/100},
-                {'userName': user_id, 'title': movie2, 'standardized_score': score2/100}
-            ]
-            top_movies_collab_df = pd.concat([top_movies_collab_df, pd.DataFrame(new_rows)], ignore_index=True)
