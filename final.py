@@ -62,6 +62,39 @@ method = st.selectbox("Select Recommendation Method:", [
     "Content-Based", "Collaborative", "NLP-Based", "Hybrid"
 ])
 
+# Display method description in an info container
+if method == "Content-Based":
+    st.info("""
+    **Content-Based Filtering** recommends movies similar to ones you like based on features like genre, 
+    director, actors, and plot keywords. This method analyzes movie attributes rather than user behavior.
+    
+    Select a movie title, genre, language, or release year to get recommendations based on similar content features.
+    """)
+    
+elif method == "Collaborative":
+    st.info("""
+    **Collaborative Filtering** suggests movies based on what similar users have enjoyed. This method 
+    identifies patterns in user ratings to find users with similar tastes and recommend what they liked.
+    
+    Enter your user ID to discover recommendations based on the preferences of users similar to you.
+    """)
+    
+elif method == "NLP-Based":
+    st.info("""
+    **Natural Language Processing (NLP)** uses text analysis to find movies matching your description. 
+    This method understands the semantics of your query to recommend relevant movies.
+    
+    Describe what kind of movie you want to watch (themes, plot elements, mood, etc.) and get tailored recommendations.
+    """)
+    
+elif method == "Hybrid":
+    st.info("""
+    **Hybrid Recommendation** combines multiple techniques for more accurate results. This method leverages 
+    both content features and collaborative patterns to provide better personalized suggestions.
+    
+    Choose a movie you like and either use your existing user ID or create a new profile by rating some movies.
+    """)
+
 # === Content-Based Filtering ===
 if method == "Content-Based":
     st.subheader("🎯 Content-Based Filtering")
