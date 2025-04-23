@@ -188,7 +188,7 @@ elif method == "NLP-Based":
             top_recommendations = nlp_df.sort_values('similarity', ascending=False).head(10)
             
             # Display recommendations
-            st.subheader("🔍 Recommendations (TF-IDF only)")
+            st.subheader("🔍 Recommendations ")
             for idx, rec in enumerate(top_recommendations.itertuples(), 1):
                 genres = [col for col in feature_cols if col not in ['runtimeMinutes', 'director', 'originalLanguage'] and getattr(rec, col, 0) == 1]
                 st.markdown(f"**{idx}. {rec.title}** - Similarity: {rec.similarity:.2f}")
